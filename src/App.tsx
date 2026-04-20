@@ -9,6 +9,8 @@ import AllCourses from "./pages/AllCourses";
 import MyCourses from "./pages/MyCourses";
 import CourseView from "./pages/CourseView";
 import NewCourse from "./pages/NewCourse";
+import StudySession from "./pages/StudySession";
+import Settings from "./pages/Settings";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -27,6 +29,8 @@ const App = () => (
               <Route path="/my-courses" element={<MyCourses />} />
               <Route path="/courses/new" element={<NewCourse />} />
               <Route path="/courses/:id" element={<CourseView />} />
+              <Route path="/courses/:id/study" element={<StudySession />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/login" element={<AuthPage mode="login" />} />
               <Route path="/signup" element={<AuthPage mode="signup" />} />
               <Route path="*" element={<NotFound />} />

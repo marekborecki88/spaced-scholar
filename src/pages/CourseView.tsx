@@ -52,7 +52,7 @@ export default function CourseView() {
 
   const handleStart = async () => {
     if (!user) {
-      navigate(`/login?redirect=/courses/${id}`);
+      navigate(`/login?redirect=/courses/${id}/study`);
       return;
     }
     if (!enrolled) {
@@ -60,9 +60,8 @@ export default function CourseView() {
       qc.invalidateQueries({ queryKey: ["enrollment", user.id, id] });
       qc.invalidateQueries({ queryKey: ["my-courses", user.id] });
       toast.success("Enrolled — neural link engaged");
-    } else {
-      toast.message("Session_continued", { description: "Spaced repetition queue resumed." });
     }
+    navigate(`/courses/${id}/study`);
   };
 
   const onCardSaved = (updated: Flashcard) => {
