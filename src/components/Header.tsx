@@ -50,7 +50,11 @@ export function Header() {
               <button className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]">
                 <Bell className="h-4 w-4" />
               </button>
-              <button className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]">
+              <button
+                onClick={() => navigate("/settings")}
+                title="Settings"
+                className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]"
+              >
                 <Sliders className="h-4 w-4" />
               </button>
               <DropdownMenu>
@@ -74,6 +78,9 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/courses/new")}>
                     <Plus className="mr-2 h-4 w-4" /> New_Deck
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Sliders className="mr-2 h-4 w-4" /> Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout} className="text-neon-red">
                     <LogOut className="mr-2 h-4 w-4" /> Logout
