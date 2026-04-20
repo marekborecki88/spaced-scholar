@@ -71,10 +71,11 @@ export interface CourseFilter {
 }
 
 export const api = {
-  async listCourses(filter: CourseFilter = {}): Promise<Course[]> {
+  async listCourses(filter: CourseFilter = {}, userId?: string): Promise<Course[]> {
     await wait();
     const q = filter.query?.trim().toLowerCase();
-    return MOCK_COURSES.filter((c) => {
+    const pool = [...MOCK_COURSES, ...customCoursesFor(userId)];
+    return pool.filter((c) => {
       if (filter.sourceLang && c.sourceLang !== filter.sourceLang) return false;
       if (filter.targetLang && c.targetLang !== filter.targetLang) return false;
       if (q && !`${c.title} ${c.description}`.toLowerCase().includes(q)) return false;
@@ -84,7 +85,12 @@ export const api = {
 
   async getCourse(id: string): Promise<Course | null> {
     await wait(180);
-    return MOCK_COURSES.find((c) => c.id === id) ?? null;
+    const mock = MOCK_COURSES.find((c) => c.id === id);
+    if (mock) return mock;
+    const custom = findCustomCourse(id);
+    if (!custom) return null;
+    const { ownerId: _o, ...rest } = custom;
+    return rest;
   },
 
   async listFlashcards(courseId: string): Promise<Flashcard[]> {
