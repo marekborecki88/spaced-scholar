@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { CourseCard } from "@/components/CourseCard";
@@ -29,10 +29,17 @@ export default function MyCourses() {
   return (
     <div className="space-y-8">
       <header className="space-y-3">
-        <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-          OPERATOR // {user.name}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div className="space-y-3">
+            <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+              OPERATOR // {user.name}
+            </div>
+            <h1 className="font-display text-4xl md:text-6xl neon-text-magenta glitch">MY_COURSES</h1>
+          </div>
+          <Button variant="cyber" onClick={() => navigate("/courses/new")}>
+            <Plus className="mr-2 h-4 w-4" /> New_Deck
+          </Button>
         </div>
-        <h1 className="font-display text-4xl md:text-6xl neon-text-magenta glitch">MY_COURSES</h1>
         <div className="h-px bg-gradient-to-r from-neon-magenta via-neon-cyan to-transparent" />
       </header>
 

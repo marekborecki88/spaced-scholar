@@ -29,13 +29,13 @@ export default function AllCourses() {
   }, []);
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["courses", src, tgt, query],
+    queryKey: ["courses", src, tgt, query, user?.id],
     queryFn: () =>
       api.listCourses({
         sourceLang: src === "ALL" ? undefined : src,
         targetLang: tgt === "ALL" ? undefined : tgt,
         query,
-      }),
+      }, user?.id),
   });
 
   const { data: enrollments = [] } = useQuery({
