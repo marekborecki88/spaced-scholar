@@ -15,6 +15,29 @@ import { MOCK_COURSES, MOCK_FLASHCARDS } from "./mockData";
 
 const STORE_KEY_FLASHCARDS = "vn_flashcards";
 const STORE_KEY_ENROLLMENTS = "vn_enrollments";
+const STORE_KEY_CUSTOM_COURSES = "vn_custom_courses";
+
+interface CustomCourseRecord extends Course {
+  ownerId: string;
+}
+
+function loadCustomCourses(): CustomCourseRecord[] {
+  const raw = localStorage.getItem(STORE_KEY_CUSTOM_COURSES);
+  if (!raw) return [];
+  try { return JSON.parse(raw) as CustomCourseRecord[]; } catch { return []; }
+}
+function saveCustomCourses(list: CustomCourseRecord[]) {
+  localStorage.setItem(STORE_KEY_CUSTOM_COURSES, JSON.stringify(list));
+}
+function customCoursesFor(userId?: string): Course[] {
+  if (!userId) return [];
+  return loadCustomCourses()
+    .filter((c) => c.ownerId === userId)
+    .map(({ ownerId: _o, ...rest }) => rest);
+}
+function findCustomCourse(courseId: string): CustomCourseRecord | undefined {
+  return loadCustomCourses().find((c) => c.id === courseId);
+}
 
 const wait = (ms = 280) => new Promise((r) => setTimeout(r, ms));
 
