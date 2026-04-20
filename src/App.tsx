@@ -8,6 +8,7 @@ import { Layout } from "@/components/Layout";
 import AllCourses from "./pages/AllCourses";
 import MyCourses from "./pages/MyCourses";
 import CourseView from "./pages/CourseView";
+import NewCourse from "./pages/NewCourse";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route element={<Layout />}>
               <Route path="/" element={<AllCourses />} />
               <Route path="/my-courses" element={<MyCourses />} />
+              <Route path="/courses/new" element={<NewCourse />} />
               <Route path="/courses/:id" element={<CourseView />} />
               <Route path="/login" element={<AuthPage mode="login" />} />
               <Route path="/signup" element={<AuthPage mode="signup" />} />

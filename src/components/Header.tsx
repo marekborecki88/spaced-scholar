@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Sliders, User as UserIcon } from "lucide-react";
+import { Bell, LogOut, Plus, Sliders, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,14 @@ export function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <Button
+                variant="cyber"
+                size="sm"
+                onClick={() => navigate("/courses/new")}
+                className="hidden sm:inline-flex"
+              >
+                <Plus className="mr-1 h-4 w-4" /> New_Deck
+              </Button>
               <button className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]">
                 <Bell className="h-4 w-4" />
               </button>
@@ -63,6 +71,9 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate("/my-courses")}>
                     My_Courses
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/courses/new")}>
+                    <Plus className="mr-2 h-4 w-4" /> New_Deck
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout} className="text-neon-red">
                     <LogOut className="mr-2 h-4 w-4" /> Logout
