@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Plus, Sliders, User as UserIcon } from "lucide-react";
+import { BarChart3, Bell, LogOut, Plus, Sliders, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,6 +64,9 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/stats")}>
+                    <BarChart3 className="mr-2 h-4 w-4" /> Stats
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/settings")}>
                     <Sliders className="mr-2 h-4 w-4" /> Settings
                   </DropdownMenuItem>

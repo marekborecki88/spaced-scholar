@@ -11,6 +11,7 @@ import { LoadingGrid } from "@/components/LoadingGrid";
 import { EmptyState } from "@/components/EmptyState";
 import { useSettings } from "@/lib/settings";
 import { buildSession, checkAnswer, type CardProgress, type Question } from "@/lib/session";
+import { saveSession } from "@/lib/stats";
 import { toast } from "sonner";
 
 type Phase = "preview" | "asking" | "done";
@@ -51,6 +52,8 @@ export default function StudySession() {
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<null | { ok: boolean; expected: string }>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const startedAtRef = useRef<number>(Date.now());
+  const savedRef = useRef(false);
 
   useEffect(() => {
     if (course) document.title = `Study // ${course.title}`;
@@ -164,7 +167,28 @@ export default function StudySession() {
     setFeedback(null);
     setInput("");
     if (qIdx + 1 < totalQ) setQIdx(qIdx + 1);
-    else setPhase("done");
+    else {
+      // Persist a session record exactly once when finishing.
+      if (!savedRef.current && course) {
+        savedRef.current = true;
+        const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
+        const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
+        const learned = Object.values(progress).filter((p) => p.learned).length;
+        saveSession({
+          id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          userId: user?.id,
+          courseId: course.id,
+          courseTitle: course.title,
+          finishedAt: new Date().toISOString(),
+          totalCards: studyCards.length,
+          learnedCards: learned,
+          correct: correctTotal,
+          attempts,
+          durationSec: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)),
+        });
+      }
+      setPhase("done");
+    }
   };
 
   return (
