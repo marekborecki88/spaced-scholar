@@ -47,16 +47,6 @@ export function Header() {
               >
                 <Plus className="mr-1 h-4 w-4" /> New_Deck
               </Button>
-              <button className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]">
-                <Bell className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => navigate("/settings")}
-                title="Settings"
-                className="hidden sm:grid place-items-center h-9 w-9 border border-neon-cyan/40 text-neon-cyan hover:shadow-[0_0_12px_hsl(var(--neon-cyan)/0.5)]"
-              >
-                <Sliders className="h-4 w-4" />
-              </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 border border-neon-magenta/60 px-2 py-1 hover:shadow-[0_0_12px_hsl(var(--neon-magenta)/0.5)]">
