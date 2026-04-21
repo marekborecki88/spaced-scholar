@@ -380,3 +380,89 @@ function WheelGame({
     </div>
   );
 }
+
+/**
+ * Live-typing input: a single bottom-line input. Each typed character is
+ * colored green if it matches the expected answer prefix, red if it diverges.
+ * When the full answer is typed correctly, auto-submits.
+ */
+function LiveTyper({
+  answer, disabled, onComplete,
+}: { answer: string; disabled: boolean; onComplete: (guess: string) => void }) {
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const submittedRef = useRef(false);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const normTarget = answer.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Per-character correctness based on normalized comparison, but display original chars.
+  const chars = value.split("");
+  const normChars = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split("");
+  const allCorrectSoFar = normChars.every((c, i) => c === normTarget[i]);
+  const fullyCorrect = allCorrectSoFar && normChars.length === normTarget.length;
+
+  useEffect(() => {
+    if (fullyCorrect && !submittedRef.current && !disabled) {
+      submittedRef.current = true;
+      // tiny delay so user sees the green confirmation
+      const t = setTimeout(() => onComplete(value), 180);
+      return () => clearTimeout(t);
+    }
+  }, [fullyCorrect, disabled, onComplete, value]);
+
+  return (
+    <div className="space-y-3 max-w-xl mx-auto">
+      <div className="relative">
+        {/* Visual overlay with colored characters */}
+        <div className="font-display text-2xl md:text-3xl text-center tracking-[0.15em] min-h-[2.5rem] py-2 select-none">
+          {chars.length === 0 ? (
+            <span className="text-muted-foreground/40 text-base tracking-widest uppercase">
+              start typing...
+            </span>
+          ) : (
+            chars.map((c, i) => {
+              const ok = normChars[i] === normTarget[i];
+              return (
+                <span
+                  key={i}
+                  className={ok ? "text-neon-green" : "text-neon-red"}
+                  style={{
+                    textShadow: ok
+                      ? "0 0 8px hsl(var(--neon-green) / 0.7)"
+                      : "0 0 8px hsl(var(--neon-red) / 0.7)",
+                  }}
+                >
+                  {c === " " ? "\u00A0" : c}
+                </span>
+              );
+            })
+          )}
+        </div>
+        {/* Bottom-line input (transparent text, only the underline is visible) */}
+        <input
+          ref={inputRef}
+          disabled={disabled}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (!disabled) onComplete(value);
+            }
+          }}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="w-full bg-transparent border-0 border-b border-neon-cyan/60 focus:border-neon-cyan focus:outline-none text-center text-transparent caret-neon-cyan font-display text-2xl md:text-3xl tracking-[0.15em] py-2"
+        />
+      </div>
+      <p className="text-[10px] text-muted-foreground/70 text-center uppercase tracking-widest">
+        green = correct so far · red = wrong char · enter to submit
+      </p>
+    </div>
+  );
+}
