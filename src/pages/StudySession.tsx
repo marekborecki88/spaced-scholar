@@ -173,7 +173,7 @@ export default function StudySession() {
         <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           <span>question {qIdx + 1} / {totalQ}</span>
           <span className="px-2 py-0.5 border border-neon-magenta/60 text-neon-magenta">
-            {q.kind === "type" ? "type_answer" : q.kind === "choice" ? "multiple_choice" : "wheel_of_fortune"}
+            {q.kind === "type" ? "type_answer" : q.kind === "choice" ? "multiple_choice" : q.kind === "wheel" ? "wheel_of_fortune" : "live_type"}
           </span>
           <span>{q.dir === "f2b" ? "front → back" : "back → front"}</span>
         </div>
@@ -237,6 +237,15 @@ export default function StudySession() {
             answer={q.answer}
             disabled={!!feedback}
             onSolve={(guess) => submit(guess)}
+          />
+        )}
+
+        {q.kind === "live" && (
+          <LiveTyper
+            key={q.id}
+            answer={q.answer}
+            disabled={!!feedback}
+            onComplete={(guess) => submit(guess)}
           />
         )}
 
