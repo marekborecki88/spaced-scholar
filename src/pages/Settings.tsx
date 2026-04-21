@@ -8,6 +8,7 @@ const TEST_LABELS: Record<TestKind, string> = {
   type: "Type_Answer",
   choice: "Multiple_Choice",
   wheel: "Wheel_Of_Fortune",
+  live: "Live_Type",
 };
 
 const DIRECTIONS: { value: Direction; label: string }[] = [
