@@ -11,6 +11,7 @@ import CourseView from "./pages/CourseView";
 import NewCourse from "./pages/NewCourse";
 import StudySession from "./pages/StudySession";
 import Settings from "./pages/Settings";
+import Stats from "./pages/Stats";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/courses/:id" element={<CourseView />} />
               <Route path="/courses/:id/study" element={<StudySession />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/stats" element={<Stats />} />
               <Route path="/login" element={<AuthPage mode="login" />} />
               <Route path="/signup" element={<AuthPage mode="signup" />} />
               <Route path="*" element={<NotFound />} />
