@@ -115,6 +115,9 @@ export function buildSession(allCards: Flashcard[], settings: LearnSettings) {
   return { studyCards, questions };
 }
 
-export function checkAnswer(q: Question, userInput: string): boolean {
+export function checkAnswer(q: Question, userInput: string, caseSensitive: boolean = false): boolean {
+  if (caseSensitive) {
+    return userInput.trim() === q.answer.trim();
+  }
   return norm(userInput) === norm(q.answer);
 }

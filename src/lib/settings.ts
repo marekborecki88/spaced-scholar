@@ -9,6 +9,7 @@ export interface LearnSettings {
   correctToLearn: number;     // correct answers needed to mark "learned"
   direction: Direction;
   testKinds: TestKind[];      // enabled test types
+  caseSensitive: boolean;     // whether to check case sensitivity in answers
 }
 
 export const DEFAULT_SETTINGS: LearnSettings = {
@@ -17,6 +18,7 @@ export const DEFAULT_SETTINGS: LearnSettings = {
   correctToLearn: 3,
   direction: "both",
   testKinds: ["type", "choice", "wheel", "live"],
+  caseSensitive: false,
 };
 
 const KEY = "vn_learn_settings";
