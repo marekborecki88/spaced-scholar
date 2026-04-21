@@ -39,14 +39,6 @@ export function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button
-                variant="cyber"
-                size="sm"
-                onClick={() => navigate("/courses/new")}
-                className="hidden sm:inline-flex"
-              >
-                <Plus className="mr-1 h-4 w-4" /> New_Deck
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 border border-neon-magenta/60 px-2 py-1 hover:shadow-[0_0_12px_hsl(var(--neon-magenta)/0.5)]">
