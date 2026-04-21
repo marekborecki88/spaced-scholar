@@ -382,9 +382,8 @@ function WheelGame({
 }
 
 /**
- * Live-typing input: a single bottom-line input. Each typed character is
- * colored green if it matches the expected answer prefix, red if it diverges.
- * When the full answer is typed correctly, auto-submits.
+ * Live-typing input: only colored answer text with blinking cursor square at end.
+ * No visible input line - just the feedback overlay.
  */
 function LiveTyper({
   answer, disabled, onComplete,
@@ -399,16 +398,18 @@ function LiveTyper({
 
   const normTarget = answer.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  // Per-character correctness based on normalized comparison, but display original chars.
+  // Per-character correctness based on normalized comparison
   const chars = value.split("");
   const normChars = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split("");
   const allCorrectSoFar = normChars.every((c, i) => c === normTarget[i]);
   const fullyCorrect = allCorrectSoFar && normChars.length === normTarget.length;
 
+  // Determine cursor color: green if empty or all correct so far, red if error
+  const lastCharCorrect = value.length === 0 || allCorrectSoFar;
+
   useEffect(() => {
     if (fullyCorrect && !submittedRef.current && !disabled) {
       submittedRef.current = true;
-      // tiny delay so user sees the green confirmation
       const t = setTimeout(() => onComplete(value), 180);
       return () => clearTimeout(t);
     }
@@ -417,32 +418,56 @@ function LiveTyper({
   return (
     <div className="space-y-3 max-w-xl mx-auto">
       <div className="relative">
-        {/* Visual overlay with colored characters */}
-        <div className="font-display text-2xl md:text-3xl text-center tracking-[0.15em] min-h-[2.5rem] py-2 select-none">
+        {/* Visual display with colored characters and blinking cursor */}
+        <div
+          className="font-display text-2xl md:text-3xl text-center tracking-[0.15em] min-h-[2.5rem] py-2 select-none cursor-text"
+          onClick={() => inputRef.current?.focus()}
+        >
           {chars.length === 0 ? (
-            <span className="text-muted-foreground/40 text-base tracking-widest uppercase">
-              start typing...
-            </span>
+            <>
+              <span className="text-muted-foreground/40 text-base tracking-widest uppercase">
+                start typing...
+              </span>
+              <span
+                className="inline-block w-3 h-3 ml-1 animate-pulse bg-neon-green"
+                style={{ boxShadow: "0 0 8px hsl(var(--neon-green) / 0.8)" }}
+              />
+            </>
           ) : (
-            chars.map((c, i) => {
-              const ok = normChars[i] === normTarget[i];
-              return (
+            <>
+              {chars.map((c, i) => {
+                const ok = normChars[i] === normTarget[i];
+                return (
+                  <span
+                    key={i}
+                    className={ok ? "text-neon-green" : "text-neon-red"}
+                    style={{
+                      textShadow: ok
+                        ? "0 0 8px hsl(var(--neon-green) / 0.7)"
+                        : "0 0 8px hsl(var(--neon-red) / 0.7)",
+                    }}
+                  >
+                    {c === " " ? "\u00A0" : c}
+                  </span>
+                );
+              })}
+              {/* Blinking cursor square */}
+              {!disabled && (
                 <span
-                  key={i}
-                  className={ok ? "text-neon-green" : "text-neon-red"}
+                  className={`inline-block w-3 h-3 ml-1 animate-pulse ${
+                    lastCharCorrect ? "bg-neon-green" : "bg-neon-red"
+                  }`}
                   style={{
-                    textShadow: ok
-                      ? "0 0 8px hsl(var(--neon-green) / 0.7)"
-                      : "0 0 8px hsl(var(--neon-red) / 0.7)",
+                    boxShadow: lastCharCorrect
+                      ? "0 0 10px hsl(var(--neon-green) / 0.9)"
+                      : "0 0 10px hsl(var(--neon-red) / 0.9)",
                   }}
-                >
-                  {c === " " ? "\u00A0" : c}
-                </span>
-              );
-            })
+                />
+              )}
+            </>
           )}
         </div>
-        {/* Bottom-line input (transparent text, only the underline is visible) */}
+        {/* Hidden input - completely invisible, just captures keystrokes */}
         <input
           ref={inputRef}
           disabled={disabled}
@@ -457,11 +482,12 @@ function LiveTyper({
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
-          className="w-full bg-transparent border-0 border-b border-neon-cyan/60 focus:border-neon-cyan focus:outline-none text-center text-transparent caret-neon-cyan font-display text-2xl md:text-3xl tracking-[0.15em] py-2"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+          style={{ caretColor: "transparent" }}
         />
       </div>
       <p className="text-[10px] text-muted-foreground/70 text-center uppercase tracking-widest">
-        green = correct so far · red = wrong char · enter to submit
+        type the answer · green = correct · red = error
       </p>
     </div>
   );
