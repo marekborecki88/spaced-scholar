@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type TestKind = "type" | "choice" | "wheel";
+export type TestKind = "type" | "choice" | "wheel" | "live";
 export type Direction = "f2b" | "b2f" | "both";
 
 export interface LearnSettings {
@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS: LearnSettings = {
   batchSize: 5,
   correctToLearn: 3,
   direction: "both",
-  testKinds: ["type", "choice", "wheel"],
+  testKinds: ["type", "choice", "wheel", "live"],
 };
 
 const KEY = "vn_learn_settings";
