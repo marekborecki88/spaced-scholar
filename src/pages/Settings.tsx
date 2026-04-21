@@ -102,6 +102,29 @@ export default function Settings() {
       </section>
 
       <section className="cyber-panel corner-cuts p-6 space-y-4">
+        <h2 className="font-display text-lg neon-text-cyan">ANSWER_CHECKING</h2>
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.caseSensitive}
+              onChange={(e) => update("caseSensitive", e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-5 bg-muted border border-border rounded-full peer-checked:bg-neon-cyan/30 peer-checked:border-neon-cyan transition-colors relative">
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform ${settings.caseSensitive ? 'translate-x-5 bg-neon-cyan' : 'bg-muted-foreground/50'}`} />
+            </div>
+            <span className="text-sm text-muted-foreground">
+              Case sensitive checking
+            </span>
+          </label>
+          <p className="text-[10px] text-muted-foreground/70">
+            When enabled, "Berlin" and "berlin" are treated as different answers.
+          </p>
+        </div>
+      </section>
+
+      <section className="cyber-panel corner-cuts p-6 space-y-4">
         <h2 className="font-display text-lg neon-text-cyan">TEST_TYPES</h2>
         <p className="text-xs text-muted-foreground">Pick which question formats appear during sessions.</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

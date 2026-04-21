@@ -148,7 +148,7 @@ export default function StudySession() {
   const q = questions[qIdx];
   const submit = (raw: string) => {
     if (feedback) return;
-    const ok = checkAnswer(q, raw);
+    const ok = checkAnswer(q, raw, settings.caseSensitive);
     setFeedback({ ok, expected: q.answer });
     setProgress((prev) => {
       const cur = prev[q.cardId] ?? { cardId: q.cardId, correct: 0, attempts: 0, learned: false };
@@ -209,7 +209,7 @@ export default function StudySession() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
             {q.choices?.map((c) => {
               const picked = feedback && c === input;
-              const isCorrect = feedback && checkAnswer(q, c);
+              const isCorrect = feedback && checkAnswer(q, c, settings.caseSensitive);
               const cls = !feedback
                 ? "border-border hover:border-neon-cyan/80"
                 : isCorrect
@@ -245,6 +245,7 @@ export default function StudySession() {
             key={q.id}
             answer={q.answer}
             disabled={!!feedback}
+            caseSensitive={settings.caseSensitive}
             onComplete={(guess) => submit(guess)}
           />
         )}
@@ -386,8 +387,8 @@ function WheelGame({
  * No visible input line - just the feedback overlay.
  */
 function LiveTyper({
-  answer, disabled, onComplete,
-}: { answer: string; disabled: boolean; onComplete: (guess: string) => void }) {
+  answer, disabled, onComplete, caseSensitive,
+}: { answer: string; disabled: boolean; caseSensitive: boolean; onComplete: (guess: string) => void }) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const submittedRef = useRef(false);
@@ -396,11 +397,17 @@ function LiveTyper({
     inputRef.current?.focus();
   }, []);
 
-  const normTarget = answer.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // Normalization: remove diacritics and optionally lowercase
+  const normalize = (s: string) => {
+    const base = s.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return caseSensitive ? base : base.toLowerCase();
+  };
+
+  const normTarget = normalize(answer);
 
   // Per-character correctness based on normalized comparison
   const chars = value.split("");
-  const normChars = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split("");
+  const normChars = normalize(value).split("");
   const allCorrectSoFar = normChars.every((c, i) => c === normTarget[i]);
   const fullyCorrect = allCorrectSoFar && normChars.length === normTarget.length;
 
