@@ -63,9 +63,7 @@ export function Header() {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/my-courses")}>
-                    My_Courses
-                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate("/settings")}>
                     <Sliders className="mr-2 h-4 w-4" /> Settings
                   </DropdownMenuItem>
