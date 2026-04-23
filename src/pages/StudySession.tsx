@@ -86,19 +86,6 @@ export default function StudySession() {
     if (phase === "asking" && !feedback) inputRef.current?.focus();
   }, [phase, qIdx, feedback]);
 
-  if (!user) return null;
-  if (loadingCourse || loadingCards) return <LoadingGrid count={2} />;
-  if (!course) return <EmptyState title="DECK_NOT_FOUND" description="Unknown deck." />;
-  if (cards.length === 0) {
-    return (
-      <EmptyState
-        title="EMPTY_DECK"
-        description="Add cards before starting a session."
-        action={<Button variant="cyber" onClick={() => navigate(`/courses/${id}`)}>Back_To_Deck</Button>}
-      />
-    );
-  }
-
   const totalQ = questions.length;
   const totalBatches = miniBatches.length;
   const curBatch = miniBatches[batchIdx];
@@ -111,6 +98,19 @@ export default function StudySession() {
       .map((cid) => studyCards.find((c) => c.id === cid))
       .filter((c): c is NonNullable<typeof c> => Boolean(c));
   }, [curBatch, studyCards, progress]);
+
+  if (!user) return null;
+  if (loadingCourse || loadingCards) return <LoadingGrid count={2} />;
+  if (!course) return <EmptyState title="DECK_NOT_FOUND" description="Unknown deck." />;
+  if (cards.length === 0) {
+    return (
+      <EmptyState
+        title="EMPTY_DECK"
+        description="Add cards before starting a session."
+        action={<Button variant="cyber" onClick={() => navigate(`/courses/${id}`)}>Back_To_Deck</Button>}
+      />
+    );
+  }
 
   const overallPct = phase === "done"
     ? 100
