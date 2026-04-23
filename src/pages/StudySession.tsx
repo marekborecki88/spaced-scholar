@@ -104,7 +104,13 @@ export default function StudySession() {
   const curBatch = miniBatches[batchIdx];
 
   // Cards in current mini-batch that have NOT been answered yet → need preview.
-  const previewCards = useMemoCards(curBatch, studyCards, progress);
+  const previewCards = useMemo(() => {
+    if (!curBatch) return [];
+    return curBatch.cardIds
+      .filter((cid) => !progress[cid]) // only cards never answered yet
+      .map((cid) => studyCards.find((c) => c.id === cid))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c));
+  }, [curBatch, studyCards, progress]);
 
   const overallPct = phase === "done"
     ? 100
