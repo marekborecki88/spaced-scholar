@@ -211,29 +211,39 @@ export default function StudySession() {
   const next = () => {
     setFeedback(null);
     setInput("");
-    if (qIdx + 1 < totalQ) setQIdx(qIdx + 1);
-    else {
-      // Persist a session record exactly once when finishing.
-      if (!savedRef.current && course) {
-        savedRef.current = true;
-        const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
-        const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
-        const learned = Object.values(progress).filter((p) => p.learned).length;
-        saveSession({
-          id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          userId: user?.id,
-          courseId: course.id,
-          courseTitle: course.title,
-          finishedAt: new Date().toISOString(),
-          totalCards: studyCards.length,
-          learnedCards: learned,
-          correct: correctTotal,
-          attempts,
-          durationSec: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)),
-        });
-      }
-      setPhase("done");
+    // Are we at the last question of the current mini-batch?
+    const isLastInBatch = curBatch && qIdx === curBatch.questionIdxs[curBatch.questionIdxs.length - 1];
+    if (!isLastInBatch) {
+      setQIdx(qIdx + 1);
+      return;
     }
+    // Move to next mini-batch (preview phase) if any remain.
+    if (batchIdx + 1 < totalBatches) {
+      setBatchIdx(batchIdx + 1);
+      setPreviewIdx(0);
+      setPhase("preview");
+      return;
+    }
+    // Otherwise — session done.
+    if (!savedRef.current && course) {
+      savedRef.current = true;
+      const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
+      const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
+      const learned = Object.values(progress).filter((p) => p.learned).length;
+      saveSession({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        userId: user?.id,
+        courseId: course.id,
+        courseTitle: course.title,
+        finishedAt: new Date().toISOString(),
+        totalCards: studyCards.length,
+        learnedCards: learned,
+        correct: correctTotal,
+        attempts,
+        durationSec: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)),
+      });
+    }
+    setPhase("done");
   };
 
   return (
