@@ -45,7 +45,30 @@ export default function StudySession() {
   const studyCards = built?.studyCards ?? [];
   const questions: Question[] = built?.questions ?? [];
 
+  // Group questions into mini-batches of up to 2 distinct cards.
+  // Within a mini-batch, all questions for those cards are asked before moving on.
+  const miniBatches = useMemo(() => {
+    const batches: { cardIds: string[]; questionIdxs: number[] }[] = [];
+    const BATCH_CARDS = 2;
+    let cur: { cardIds: string[]; questionIdxs: number[] } | null = null;
+    questions.forEach((q, i) => {
+      if (!cur) cur = { cardIds: [], questionIdxs: [] };
+      if (!cur.cardIds.includes(q.cardId)) {
+        if (cur.cardIds.length >= BATCH_CARDS) {
+          batches.push(cur);
+          cur = { cardIds: [q.cardId], questionIdxs: [i] };
+          return;
+        }
+        cur.cardIds.push(q.cardId);
+      }
+      cur.questionIdxs.push(i);
+    });
+    if (cur && cur.questionIdxs.length) batches.push(cur);
+    return batches;
+  }, [questions]);
+
   const [phase, setPhase] = useState<Phase>("preview");
+  const [batchIdx, setBatchIdx] = useState(0);
   const [previewIdx, setPreviewIdx] = useState(0);
   const [qIdx, setQIdx] = useState(0);
   const [progress, setProgress] = useState<Record<string, CardProgress>>({});
@@ -63,6 +86,19 @@ export default function StudySession() {
     if (phase === "asking" && !feedback) inputRef.current?.focus();
   }, [phase, qIdx, feedback]);
 
+  const totalQ = questions.length;
+  const totalBatches = miniBatches.length;
+  const curBatch = miniBatches[batchIdx];
+
+  // Cards in current mini-batch that have NOT been answered yet → need preview.
+  const previewCards = useMemo(() => {
+    if (!curBatch) return [];
+    return curBatch.cardIds
+      .filter((cid) => !progress[cid]) // only cards never answered yet
+      .map((cid) => studyCards.find((c) => c.id === cid))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c));
+  }, [curBatch, studyCards, progress]);
+
   if (!user) return null;
   if (loadingCourse || loadingCards) return <LoadingGrid count={2} />;
   if (!course) return <EmptyState title="DECK_NOT_FOUND" description="Unknown deck." />;
@@ -76,23 +112,34 @@ export default function StudySession() {
     );
   }
 
-  const totalQ = questions.length;
   const overallPct = phase === "done"
     ? 100
-    : phase === "preview"
-      ? Math.round(((previewIdx) / Math.max(1, studyCards.length)) * 15) // preview = first 15%
-      : 15 + Math.round((qIdx / Math.max(1, totalQ)) * 85);
+    : Math.round(((batchIdx) / Math.max(1, totalBatches)) * 100
+        + (phase === "asking" && curBatch
+            ? (curBatch.questionIdxs.indexOf(qIdx) + 1) / curBatch.questionIdxs.length / Math.max(1, totalBatches) * 100
+            : 0));
 
   const learnedCount = Object.values(progress).filter((p) => p.learned).length;
 
   // ── PREVIEW PHASE ──
   if (phase === "preview") {
-    const card = studyCards[previewIdx];
+    // If no new cards to preview in this batch, jump straight to asking.
+    if (previewCards.length === 0) {
+      // Schedule a phase flip on next tick via effect-less guard:
+      // setting state during render is unsafe, so use a microtask.
+      queueMicrotask(() => {
+        setPreviewIdx(0);
+        if (curBatch) setQIdx(curBatch.questionIdxs[0]);
+        setPhase("asking");
+      });
+      return <LoadingGrid count={1} />;
+    }
+    const card = previewCards[Math.min(previewIdx, previewCards.length - 1)];
     return (
       <SessionShell course={course.title} pct={overallPct} learned={learnedCount} total={studyCards.length}>
         <div className="cyber-panel corner-cuts p-6 md:p-10 space-y-6">
           <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground text-center">
-            preview // {previewIdx + 1} / {studyCards.length} — get familiar before the test
+            preview // batch {batchIdx + 1}/{totalBatches} — card {previewIdx + 1}/{previewCards.length} — get familiar before the test
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PreviewSide label="FRONT" value={card.front} color="cyan" />
@@ -110,11 +157,15 @@ export default function StudySession() {
             <Button
               variant="cyber"
               onClick={() => {
-                if (previewIdx + 1 < studyCards.length) setPreviewIdx(previewIdx + 1);
-                else setPhase("asking");
+                if (previewIdx + 1 < previewCards.length) setPreviewIdx(previewIdx + 1);
+                else {
+                  setPreviewIdx(0);
+                  if (curBatch) setQIdx(curBatch.questionIdxs[0]);
+                  setPhase("asking");
+                }
               }}
             >
-              {previewIdx + 1 < studyCards.length ? "Next_Card" : "Begin_Test"}
+              {previewIdx + 1 < previewCards.length ? "Next_Card" : "Begin_Test"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -166,29 +217,39 @@ export default function StudySession() {
   const next = () => {
     setFeedback(null);
     setInput("");
-    if (qIdx + 1 < totalQ) setQIdx(qIdx + 1);
-    else {
-      // Persist a session record exactly once when finishing.
-      if (!savedRef.current && course) {
-        savedRef.current = true;
-        const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
-        const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
-        const learned = Object.values(progress).filter((p) => p.learned).length;
-        saveSession({
-          id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          userId: user?.id,
-          courseId: course.id,
-          courseTitle: course.title,
-          finishedAt: new Date().toISOString(),
-          totalCards: studyCards.length,
-          learnedCards: learned,
-          correct: correctTotal,
-          attempts,
-          durationSec: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)),
-        });
-      }
-      setPhase("done");
+    // Are we at the last question of the current mini-batch?
+    const isLastInBatch = curBatch && qIdx === curBatch.questionIdxs[curBatch.questionIdxs.length - 1];
+    if (!isLastInBatch) {
+      setQIdx(qIdx + 1);
+      return;
     }
+    // Move to next mini-batch (preview phase) if any remain.
+    if (batchIdx + 1 < totalBatches) {
+      setBatchIdx(batchIdx + 1);
+      setPreviewIdx(0);
+      setPhase("preview");
+      return;
+    }
+    // Otherwise — session done.
+    if (!savedRef.current && course) {
+      savedRef.current = true;
+      const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
+      const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
+      const learned = Object.values(progress).filter((p) => p.learned).length;
+      saveSession({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        userId: user?.id,
+        courseId: course.id,
+        courseTitle: course.title,
+        finishedAt: new Date().toISOString(),
+        totalCards: studyCards.length,
+        learnedCards: learned,
+        correct: correctTotal,
+        attempts,
+        durationSec: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)),
+      });
+    }
+    setPhase("done");
   };
 
   return (
