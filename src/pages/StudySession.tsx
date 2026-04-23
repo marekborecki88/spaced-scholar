@@ -45,7 +45,30 @@ export default function StudySession() {
   const studyCards = built?.studyCards ?? [];
   const questions: Question[] = built?.questions ?? [];
 
+  // Group questions into mini-batches of up to 2 distinct cards.
+  // Within a mini-batch, all questions for those cards are asked before moving on.
+  const miniBatches = useMemo(() => {
+    const batches: { cardIds: string[]; questionIdxs: number[] }[] = [];
+    const BATCH_CARDS = 2;
+    let cur: { cardIds: string[]; questionIdxs: number[] } | null = null;
+    questions.forEach((q, i) => {
+      if (!cur) cur = { cardIds: [], questionIdxs: [] };
+      if (!cur.cardIds.includes(q.cardId)) {
+        if (cur.cardIds.length >= BATCH_CARDS) {
+          batches.push(cur);
+          cur = { cardIds: [q.cardId], questionIdxs: [i] };
+          return;
+        }
+        cur.cardIds.push(q.cardId);
+      }
+      cur.questionIdxs.push(i);
+    });
+    if (cur && cur.questionIdxs.length) batches.push(cur);
+    return batches;
+  }, [questions]);
+
   const [phase, setPhase] = useState<Phase>("preview");
+  const [batchIdx, setBatchIdx] = useState(0);
   const [previewIdx, setPreviewIdx] = useState(0);
   const [qIdx, setQIdx] = useState(0);
   const [progress, setProgress] = useState<Record<string, CardProgress>>({});
