@@ -182,17 +182,7 @@ export default function StudySession() {
             <Button variant="ghost" size="sm" onClick={() => navigate(`/courses/${id}`)}>
               Cancel
             </Button>
-            <Button
-              variant="cyber"
-              onClick={() => {
-                if (previewIdx + 1 < previewCards.length) setPreviewIdx(previewIdx + 1);
-                else {
-                  setPreviewIdx(0);
-                  if (curBatch) setQIdx(curBatch.questionIdxs[0]);
-                  setPhase("asking");
-                }
-              }}
-            >
+            <Button variant="cyber" onClick={advancePreview}>
               {previewIdx + 1 < previewCards.length ? "Next_Card" : "Begin_Test"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
