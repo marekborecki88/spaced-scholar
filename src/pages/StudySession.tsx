@@ -90,6 +90,25 @@ export default function StudySession() {
   const totalBatches = miniBatches.length;
   const curBatch = miniBatches[batchIdx];
 
+  // Global Enter handler — advance to next window where it makes sense.
+  // Skipped when focus is in a text input/textarea so typing answers still works.
+  const advanceRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      if (isEditable) return;
+      const fn = advanceRef.current;
+      if (fn) {
+        e.preventDefault();
+        fn();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Cards in current mini-batch that have NOT been answered yet → need preview.
   const previewCards = useMemo(() => {
     if (!curBatch) return [];
