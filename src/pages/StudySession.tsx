@@ -197,6 +197,7 @@ export default function StudySession() {
     const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
     const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
     const acc = attempts ? Math.round((correctTotal / attempts) * 100) : 0;
+    advanceRef.current = () => navigate(`/courses/${id}`);
     return (
       <SessionShell course={course.title} pct={100} learned={learnedCount} total={studyCards.length}>
         <div className="cyber-panel corner-cuts p-8 space-y-6 text-center">
