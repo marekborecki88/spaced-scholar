@@ -219,6 +219,9 @@ export default function StudySession() {
 
   // ── ASKING PHASE ──
   const q = questions[qIdx];
+  // While feedback is shown, Enter advances to next question. Otherwise no-op
+  // (per-question components handle their own submit, e.g. Enter in the type input).
+  advanceRef.current = feedback ? () => next() : null;
   const submit = (raw: string) => {
     if (feedback) return;
     const ok = checkAnswer(q, raw, settings.caseSensitive);
