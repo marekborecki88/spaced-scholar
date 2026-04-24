@@ -291,29 +291,15 @@ export default function StudySession() {
         )}
 
         {q.kind === "choice" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-            {q.choices?.map((c) => {
-              const picked = feedback && c === input;
-              const isCorrect = feedback && checkAnswer(q, c, settings.caseSensitive);
-              const cls = !feedback
-                ? "border-border hover:border-neon-cyan/80"
-                : isCorrect
-                  ? "border-neon-green text-neon-green shadow-[0_0_12px_hsl(var(--neon-green)/0.4)]"
-                  : picked
-                    ? "border-neon-red text-neon-red"
-                    : "border-border opacity-60";
-              return (
-                <button
-                  key={c}
-                  disabled={!!feedback}
-                  onClick={() => { setInput(c); submit(c); }}
-                  className={`p-4 border text-left font-display transition-colors ${cls}`}
-                >
-                  {c}
-                </button>
-              );
-            })}
-          </div>
+          <ChoiceGrid
+            key={q.id}
+            choices={q.choices ?? []}
+            disabled={!!feedback}
+            picked={input}
+            isCorrect={(c) => checkAnswer(q, c, settings.caseSensitive)}
+            showFeedback={!!feedback}
+            onPick={(c) => { setInput(c); submit(c); }}
+          />
         )}
 
         {q.kind === "wheel" && (
