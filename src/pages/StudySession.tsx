@@ -90,6 +90,25 @@ export default function StudySession() {
   const totalBatches = miniBatches.length;
   const curBatch = miniBatches[batchIdx];
 
+  // Global Enter handler — advance to next window where it makes sense.
+  // Skipped when focus is in a text input/textarea so typing answers still works.
+  const advanceRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      if (isEditable) return;
+      const fn = advanceRef.current;
+      if (fn) {
+        e.preventDefault();
+        fn();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Cards in current mini-batch that have NOT been answered yet → need preview.
   const previewCards = useMemo(() => {
     if (!curBatch) return [];
@@ -135,6 +154,15 @@ export default function StudySession() {
       return <LoadingGrid count={1} />;
     }
     const card = previewCards[Math.min(previewIdx, previewCards.length - 1)];
+    const advancePreview = () => {
+      if (previewIdx + 1 < previewCards.length) setPreviewIdx(previewIdx + 1);
+      else {
+        setPreviewIdx(0);
+        if (curBatch) setQIdx(curBatch.questionIdxs[0]);
+        setPhase("asking");
+      }
+    };
+    advanceRef.current = advancePreview;
     return (
       <SessionShell course={course.title} pct={overallPct} learned={learnedCount} total={studyCards.length}>
         <div className="cyber-panel corner-cuts p-6 md:p-10 space-y-6">
@@ -154,17 +182,7 @@ export default function StudySession() {
             <Button variant="ghost" size="sm" onClick={() => navigate(`/courses/${id}`)}>
               Cancel
             </Button>
-            <Button
-              variant="cyber"
-              onClick={() => {
-                if (previewIdx + 1 < previewCards.length) setPreviewIdx(previewIdx + 1);
-                else {
-                  setPreviewIdx(0);
-                  if (curBatch) setQIdx(curBatch.questionIdxs[0]);
-                  setPhase("asking");
-                }
-              }}
-            >
+            <Button variant="cyber" onClick={advancePreview}>
               {previewIdx + 1 < previewCards.length ? "Next_Card" : "Begin_Test"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
@@ -179,6 +197,7 @@ export default function StudySession() {
     const correctTotal = Object.values(progress).reduce((a, p) => a + p.correct, 0);
     const attempts = Object.values(progress).reduce((a, p) => a + p.attempts, 0);
     const acc = attempts ? Math.round((correctTotal / attempts) * 100) : 0;
+    advanceRef.current = () => navigate(`/courses/${id}`);
     return (
       <SessionShell course={course.title} pct={100} learned={learnedCount} total={studyCards.length}>
         <div className="cyber-panel corner-cuts p-8 space-y-6 text-center">
@@ -200,6 +219,9 @@ export default function StudySession() {
 
   // ── ASKING PHASE ──
   const q = questions[qIdx];
+  // While feedback is shown, Enter advances to next question. Otherwise no-op
+  // (per-question components handle their own submit, e.g. Enter in the type input).
+  advanceRef.current = feedback ? () => next() : null;
   const submit = (raw: string) => {
     if (feedback) return;
     const ok = checkAnswer(q, raw, settings.caseSensitive);
