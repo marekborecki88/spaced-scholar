@@ -154,6 +154,15 @@ export default function StudySession() {
       return <LoadingGrid count={1} />;
     }
     const card = previewCards[Math.min(previewIdx, previewCards.length - 1)];
+    const advancePreview = () => {
+      if (previewIdx + 1 < previewCards.length) setPreviewIdx(previewIdx + 1);
+      else {
+        setPreviewIdx(0);
+        if (curBatch) setQIdx(curBatch.questionIdxs[0]);
+        setPhase("asking");
+      }
+    };
+    advanceRef.current = advancePreview;
     return (
       <SessionShell course={course.title} pct={overallPct} learned={learnedCount} total={studyCards.length}>
         <div className="cyber-panel corner-cuts p-6 md:p-10 space-y-6">
