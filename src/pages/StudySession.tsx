@@ -378,6 +378,72 @@ function PreviewSide({ label, value, color }: { label: string; value: string; co
   );
 }
 
+function ChoiceGrid({
+  choices, disabled, picked, isCorrect, showFeedback, onPick,
+}: {
+  choices: string[];
+  disabled: boolean;
+  picked: string;
+  isCorrect: (c: string) => boolean;
+  showFeedback: boolean;
+  onPick: (c: string) => void;
+}) {
+  useEffect(() => {
+    if (disabled) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const n = parseInt(e.key, 10);
+      if (!Number.isNaN(n) && n >= 1 && n <= choices.length) {
+        e.preventDefault();
+        onPick(choices[n - 1]);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [choices, disabled, onPick]);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+      {choices.map((c, i) => {
+        const isPicked = showFeedback && c === picked;
+        const correct = showFeedback && isCorrect(c);
+        const cls = !showFeedback
+          ? "border-border hover:border-neon-cyan/80"
+          : correct
+            ? "border-neon-green text-neon-green shadow-[0_0_12px_hsl(var(--neon-green)/0.4)]"
+            : isPicked
+              ? "border-neon-red text-neon-red"
+              : "border-border opacity-60";
+        return (
+          <button
+            key={c}
+            disabled={disabled}
+            onClick={() => onPick(c)}
+            className={`p-4 border text-left font-display transition-colors flex items-center gap-3 ${cls}`}
+          >
+            <span
+              className={`shrink-0 inline-flex items-center justify-center w-7 h-7 border text-xs font-display ${
+                showFeedback
+                  ? correct
+                    ? "border-neon-green text-neon-green"
+                    : isPicked
+                      ? "border-neon-red text-neon-red"
+                      : "border-border text-muted-foreground"
+                  : "border-neon-magenta/70 text-neon-magenta shadow-[0_0_8px_hsl(var(--neon-magenta)/0.4)]"
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className="flex-1">{c}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-neon-cyan/40 p-3">
