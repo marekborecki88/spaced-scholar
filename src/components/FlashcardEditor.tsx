@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { AudioPicker } from "@/components/AudioPicker";
 import type { Flashcard } from "@/types";
 import { api } from "@/api/client";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ export function FlashcardEditor({ card, open, onOpenChange, onSaved }: Props) {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const [note, setNote] = useState("");
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -26,6 +28,7 @@ export function FlashcardEditor({ card, open, onOpenChange, onSaved }: Props) {
       setFront(card.front);
       setBack(card.back);
       setNote(card.note ?? "");
+      setAudioUrl(card.audioUrl);
     }
   }, [card]);
 
@@ -33,7 +36,7 @@ export function FlashcardEditor({ card, open, onOpenChange, onSaved }: Props) {
     if (!card) return;
     setSaving(true);
     try {
-      const updated = await api.updateFlashcard(card.id, { front, back, note });
+      const updated = await api.updateFlashcard(card.id, { front, back, note, audioUrl });
       onSaved(updated);
       toast.success("Card updated");
       onOpenChange(false);
@@ -66,6 +69,7 @@ export function FlashcardEditor({ card, open, onOpenChange, onSaved }: Props) {
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Note</Label>
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
           </div>
+          <AudioPicker value={audioUrl} onChange={setAudioUrl} label="back_audio (auto-plays)" />
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
