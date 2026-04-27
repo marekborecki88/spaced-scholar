@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { LangCode } from "@/types";
+import { AudioPicker } from "@/components/AudioPicker";
 
 const LANGS: LangCode[] = ["EN", "PL", "DE", "ES", "FR", "JP"];
 
@@ -25,6 +26,7 @@ interface CardDraft {
   front: string;
   back: string;
   note: string;
+  audioUrl?: string;
 }
 
 const newCard = (): CardDraft => ({
@@ -32,6 +34,7 @@ const newCard = (): CardDraft => ({
   front: "",
   back: "",
   note: "",
+  audioUrl: undefined,
 });
 
 export default function NewCourse() {
@@ -70,7 +73,7 @@ export default function NewCourse() {
       const course = await api.createCourse(
         user.id,
         { title, description, sourceLang, targetLang, tag },
-        validCards.map((c) => ({ front: c.front, back: c.back, note: c.note })),
+        validCards.map((c) => ({ front: c.front, back: c.back, note: c.note, audioUrl: c.audioUrl })),
       );
       qc.invalidateQueries({ queryKey: ["courses"] });
       qc.invalidateQueries({ queryKey: ["my-courses", user.id] });
@@ -228,6 +231,11 @@ export default function NewCourse() {
                   className="bg-input/30 border-border focus-visible:ring-neon-cyan font-mono"
                 />
               </div>
+              <AudioPicker
+                value={card.audioUrl}
+                onChange={(url) => updateCard(card.key, { audioUrl: url })}
+                label="back_audio (auto-plays)"
+              />
             </div>
           ))}
         </div>

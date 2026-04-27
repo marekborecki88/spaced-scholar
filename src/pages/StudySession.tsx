@@ -13,6 +13,7 @@ import { useSettings } from "@/lib/settings";
 import { buildSession, checkAnswer, type CardProgress, type Question } from "@/lib/session";
 import { saveSession } from "@/lib/stats";
 import { toast } from "sonner";
+import { useAutoPlay } from "@/hooks/useAutoPlay";
 
 type Phase = "preview" | "asking" | "done";
 
@@ -117,6 +118,28 @@ export default function StudySession() {
       .map((cid) => studyCards.find((c) => c.id === cid))
       .filter((c): c is NonNullable<typeof c> => Boolean(c));
   }, [curBatch, studyCards, progress]);
+
+  // Auto-play audio whenever the BACK side is being revealed:
+  //  - during preview (front+back shown together),
+  //  - during asking once feedback (correct answer) appears.
+  const currentBackAudio: string | undefined = (() => {
+    if (phase === "preview") {
+      const cards = curBatch
+        ? curBatch.cardIds
+            .filter((cid) => !progress[cid])
+            .map((cid) => studyCards.find((c) => c.id === cid))
+            .filter((c): c is NonNullable<typeof c> => Boolean(c))
+        : [];
+      const card = cards[Math.min(previewIdx, Math.max(0, cards.length - 1))];
+      return card?.audioUrl;
+    }
+    if (phase === "asking" && feedback) {
+      const q = questions[qIdx];
+      return studyCards.find((c) => c.id === q?.cardId)?.audioUrl;
+    }
+    return undefined;
+  })();
+  useAutoPlay(currentBackAudio, `${phase}:${batchIdx}:${previewIdx}:${qIdx}:${feedback ? 1 : 0}`);
 
   if (!user) return null;
   if (loadingCourse || loadingCards) return <LoadingGrid count={2} />;

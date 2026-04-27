@@ -98,7 +98,7 @@ export const api = {
     return loadFlashcards().filter((c) => c.courseId === courseId);
   },
 
-  async updateFlashcard(id: string, patch: Partial<Pick<Flashcard, "front" | "back" | "note">>): Promise<Flashcard> {
+  async updateFlashcard(id: string, patch: Partial<Pick<Flashcard, "front" | "back" | "note" | "audioUrl">>): Promise<Flashcard> {
     await wait(180);
     const all = loadFlashcards();
     const idx = all.findIndex((c) => c.id === id);
@@ -141,13 +141,18 @@ export const api = {
   async createCourse(
     userId: string,
     input: { title: string; description: string; sourceLang: LangCode; targetLang: LangCode; tag?: string },
-    cards: Array<{ front: string; back: string; note?: string }>,
+    cards: Array<{ front: string; back: string; note?: string; audioUrl?: string }>,
   ): Promise<Course> {
     await wait(220);
     const slug = input.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 32) || "deck";
     const id = `usr_${slug}_${Date.now().toString(36)}`;
     const filteredCards = cards
-      .map((c) => ({ front: c.front.trim(), back: c.back.trim(), note: c.note?.trim() || undefined }))
+      .map((c) => ({
+        front: c.front.trim(),
+        back: c.back.trim(),
+        note: c.note?.trim() || undefined,
+        audioUrl: c.audioUrl || undefined,
+      }))
       .filter((c) => c.front && c.back);
 
     const course: CustomCourseRecord = {
@@ -169,6 +174,7 @@ export const api = {
       front: c.front,
       back: c.back,
       note: c.note,
+      audioUrl: c.audioUrl,
       status: "new",
       correct: 0,
       total: 0,
