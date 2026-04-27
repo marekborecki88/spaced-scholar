@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import type { LangCode } from "@/types";
 import { AudioPicker } from "@/components/AudioPicker";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 const LANGS: LangCode[] = ["EN", "PL", "DE", "ES", "FR", "JP"];
 
