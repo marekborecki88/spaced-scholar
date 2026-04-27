@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { User } from "@/types";
+import { authApi } from "@/api/authApi";
 
 interface AuthContextValue {
   user: User | null;
@@ -11,41 +12,67 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "vn_auth_user";
+const STORAGE_USER = "vn_auth_user";
+const STORAGE_TOKEN = "vn_auth_token";
+const STORAGE_REFRESH = "vn_auth_refresh";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { setUser(JSON.parse(raw)); } catch { /* ignore */ }
+    const token = localStorage.getItem(STORAGE_TOKEN);
+    const cachedRaw = localStorage.getItem(STORAGE_USER);
+    if (!token) { setLoading(false); return; }
+
+    // Hydrate cached user immediately for snappy UI, then verify with backend.
+    if (cachedRaw) {
+      try { setUser(JSON.parse(cachedRaw)); } catch { /* ignore */ }
     }
-    setLoading(false);
+    authApi.me(token)
+      .then((u) => {
+        setUser(u);
+        localStorage.setItem(STORAGE_USER, JSON.stringify(u));
+      })
+      .catch(() => {
+        localStorage.removeItem(STORAGE_USER);
+        localStorage.removeItem(STORAGE_TOKEN);
+        localStorage.removeItem(STORAGE_REFRESH);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const persist = (u: User | null) => {
+  const persistSession = (u: User, token: string, refreshToken: string) => {
     setUser(u);
-    if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    else localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(STORAGE_USER, JSON.stringify(u));
+    localStorage.setItem(STORAGE_TOKEN, token);
+    localStorage.setItem(STORAGE_REFRESH, refreshToken);
+  };
+
+  const clearSession = () => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_USER);
+    localStorage.removeItem(STORAGE_TOKEN);
+    localStorage.removeItem(STORAGE_REFRESH);
   };
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
     loading,
-    async login(email) {
-      // TODO: replace with POST /api/auth/login
-      await new Promise((r) => setTimeout(r, 300));
-      const name = email.split("@")[0].toUpperCase();
-      persist({ id: btoa(email).slice(0, 12), email, name });
+    async login(email, password) {
+      const res = await authApi.login(email, password);
+      persistSession(res.user, res.token, res.refreshToken);
     },
-    async signup(email, _password, name) {
-      // TODO: replace with POST /api/auth/signup
-      await new Promise((r) => setTimeout(r, 300));
-      persist({ id: btoa(email).slice(0, 12), email, name: name || email.split("@")[0].toUpperCase() });
+    async signup(email, password, name) {
+      const res = await authApi.signup(email, password, name);
+      persistSession(res.user, res.token, res.refreshToken);
     },
-    logout() { persist(null); },
+    logout() {
+      const token = localStorage.getItem(STORAGE_TOKEN);
+      if (token) void authApi.logout(token).catch(() => { /* ignore */ });
+      clearSession();
+    },
   }), [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
