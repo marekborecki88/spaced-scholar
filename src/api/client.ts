@@ -98,7 +98,7 @@ export const api = {
     return loadFlashcards().filter((c) => c.courseId === courseId);
   },
 
-  async updateFlashcard(id: string, patch: Partial<Pick<Flashcard, "front" | "back" | "note">>): Promise<Flashcard> {
+  async updateFlashcard(id: string, patch: Partial<Pick<Flashcard, "front" | "back" | "note" | "audioUrl">>): Promise<Flashcard> {
     await wait(180);
     const all = loadFlashcards();
     const idx = all.findIndex((c) => c.id === id);
