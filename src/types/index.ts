@@ -18,6 +18,8 @@ export interface Flashcard {
   front: string;
   back: string;
   note?: string;
+  /** Optional audio recording (blob: URL in mock, https:// in real backend) played when the back is shown. */
+  audioUrl?: string;
   status: CardStatus;
   correct: number;
   total: number;
