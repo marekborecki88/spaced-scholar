@@ -64,7 +64,11 @@ export default function NewCourse() {
   const addCard = () => setCards((prev) => [...prev, newCard()]);
 
   const validCards = cards.filter((c) => c.front.trim() && c.back.trim());
-  const canSubmit = title.trim().length >= 2 && description.trim().length >= 4 && validCards.length >= 1;
+  const validationIssues: string[] = [];
+  if (title.trim().length < 2) validationIssues.push("title must be ≥ 2 chars");
+  if (description.trim().length < 4) validationIssues.push("description must be ≥ 4 chars");
+  if (validCards.length < 1) validationIssues.push("add at least 1 card with front + back");
+  const canSubmit = validationIssues.length === 0;
 
   const handleSubmit = async () => {
     if (!canSubmit || saving) return;
