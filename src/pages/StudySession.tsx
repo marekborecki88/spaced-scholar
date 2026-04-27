@@ -13,6 +13,7 @@ import { useSettings } from "@/lib/settings";
 import { buildSession, checkAnswer, type CardProgress, type Question } from "@/lib/session";
 import { saveSession } from "@/lib/stats";
 import { toast } from "sonner";
+import { useAutoPlay } from "@/hooks/useAutoPlay";
 
 type Phase = "preview" | "asking" | "done";
 
