@@ -251,10 +251,42 @@ export default function NewCourse() {
 
       <div className="flex flex-col-reverse md:flex-row md:justify-end gap-3">
         <Button variant="ghost" onClick={() => navigate(-1)}>Cancel</Button>
-        <Button variant="cyber" size="lg" disabled={!canSubmit || saving} onClick={handleSubmit}>
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? "Deploying..." : "Deploy_Deck"}
-        </Button>
+        <HoverCard openDelay={100} closeDelay={50}>
+          <HoverCardTrigger asChild>
+            {/* span wrapper so hover works while button is disabled */}
+            <span className="inline-block">
+              <Button
+                variant="cyber"
+                size="lg"
+                disabled={!canSubmit || saving}
+                onClick={handleSubmit}
+                className={!canSubmit ? "pointer-events-none" : ""}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Deploying..." : "Deploy_Deck"}
+              </Button>
+            </span>
+          </HoverCardTrigger>
+          {!canSubmit && (
+            <HoverCardContent
+              side="top"
+              align="end"
+              className="w-72 border-neon-magenta/50 bg-background/95 font-mono"
+            >
+              <div className="text-[10px] uppercase tracking-[0.3em] text-neon-magenta mb-2">
+                // missing_requirements
+              </div>
+              <ul className="space-y-1 text-xs text-foreground/90">
+                {validationIssues.map((msg) => (
+                  <li key={msg} className="flex gap-2">
+                    <span className="text-neon-cyan">›</span>
+                    <span>{msg}</span>
+                  </li>
+                ))}
+              </ul>
+            </HoverCardContent>
+          )}
+        </HoverCard>
       </div>
     </div>
   );
